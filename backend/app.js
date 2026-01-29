@@ -8,6 +8,30 @@ var cors = require("cors");
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 
+
+require('dotenv').config(); // Load variables from .env
+
+const mongoose = require('mongoose');
+
+
+
+const mongoURI = process.env.MONGODB_URI;
+
+
+
+mongoose.connect(mongoURI)
+
+.then(() => console.log("🚀 Connected to MongoDB Atlas!"))
+
+.catch((err) => console.error("❌ Connection error:", err));
+
+
+
+
+
+
+
+
 var app = express();
 
 // view engine setup

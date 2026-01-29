@@ -128,6 +128,24 @@ router.post( "/getProject" , async (req , res)=>{
   }
 });
 
+router.post("/updateproject", async (req, res) => {
+  let { userId, projId, htmlCode, cssCode, jsCode } = req.body;
+  let user = await userModel.findOne({ _id: userId });
+  if (user) {
+    let project = await projectModel.findOneAndUpdate(
+      { _id: projId },
+      { htmlCode, cssCode, jsCode },
+      { new: true }
+    );
+    if (project) {
+      return res.json({ success: true, message: "Project updated successfully" });
+    } else {
+      return res.json({ success: false, message: "Project not found" });
+    }
+  } else {
+    return res.json({ success: false, message: "User not found" });
+  }
+});
 
 module.exports = router;
 

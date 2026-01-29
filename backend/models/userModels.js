@@ -1,7 +1,7 @@
-
 const mongoose = require("mongoose"); 
+mongoose.set('debug', true); // This will log every database query to your terminal
 
-mongoose.connect('mongodb://127.0.0.1:27017/codeIDE')
+// mongoose.connect('mongodb://127.0.0.1:27017/codeIDE')
 //maine database ka naam rkka h codeIDE
 
 // let userSchema = new mongoose.userSchema({
