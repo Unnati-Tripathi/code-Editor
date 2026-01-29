@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import Navbar from '../components/Navbar'
+import React, { useEffect, useState } from 'react';
+import Navbar from '../components/Navbar';
 import ListCard from '../components/ListCard';
 import GridCard from '../components/GridCard';
 import { api_based_url } from '../helper';
@@ -9,8 +9,8 @@ function Home() {
   const [projectTitle, setProjectTitle] = useState("");
   const [isGridLayout, setGridLayout] = useState(false);
   const [isCreateProject, setIsCreateProject] = useState(false);
-  const [data, setData] = useState(null);
-  const [error, setError] = useState("");
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
 
@@ -19,96 +19,80 @@ function Home() {
   ) : [];
 
   const createP = () => {
-    if (projectTitle === "") {
-      alert("Please enter project title");
-    } else {
-      fetch(api_based_url + "/createProject", {
-        mode: "cors",
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title: projectTitle,
-          userId: localStorage.getItem("userId")
-        })
-      }).then(res => res.json()).then(data => {
-        if (data.success) {
-          setIsCreateProject(false);
-          setProjectTitle("");
-          alert("Project Created Successfully..!");
-          setTimeout(() => {
-            navigate(`/editor/${data.projectId}`);
-          }, 200);
-        } else {
-          alert("Something went Wrong!");
-        }
-      });
-    }
-  };
+    const userId = localStorage.getItem("userId");
+    if (!projectTitle.trim()) return alert("Title is required");
+    if (!userId) return navigate("/login");
 
-  const getProj = () => {
-    fetch(api_based_url + "/getProjects", {
-      mode: "cors",
+    fetch(api_based_url + "/createProject", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        userId: localStorage.getItem("userId")
-      })
-    }).then(res => res.json()).then(data => {
-      if (data.success) {
-        setData(data.projects);
-      } else {
-        setError(data.message);
-      }
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: projectTitle, userId })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) navigate(`/editor/${data.projectId}`);
+      else alert(data.message);
     });
   };
 
+  const getProj = () => {
+    setLoading(true);
+    fetch(api_based_url + "/getProjects", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: localStorage.getItem("userId") })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) setData(data.projects);
+      setLoading(false);
+    });
+  };
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/login");
+  };
+
   useEffect(() => {
-    getProj();
+    if (!localStorage.getItem("isLoggedIn")) navigate("/login");
+    else getProj();
   }, []);
 
   return (
-    <div>
+    <div className="min-h-screen bg-[#0b0b0b] text-white">
       <Navbar />
-      <div className="home flex items-center justify-between px-[100px] my-[40px]">
-        <h2 className="text-2xl">Hi, Unnati</h2>
-        <div className="flex items-center justify-center">
-          <div className="inputBox w-[200px]">
-            <input type="text" placeholder='Search Here..' value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-            <button onClick={() => setIsCreateProject(true)} className="btnBlue rounded-sm !px-[14px] h-full">+</button>
+      <div className="flex items-center justify-between px-[100px] my-[40px]">
+        <div>
+          <h2 className="text-3xl font-bold">My Projects</h2>
+          <button onClick={handleLogout} className="text-red-500 text-sm underline">Logout</button>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="inputBox !w-[300px] !bg-[#1e1e1e]">
+            <input type="text" placeholder='Search projects...' value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           </div>
+          <button onClick={() => setIsCreateProject(true)} className="btnBlue !rounded-md !px-6">+</button>
         </div>
       </div>
 
-      <div className="cards">
-        {isGridLayout ? (
-          <div className="grid px-[100px]">
-            {filterData.length > 0 ? filterData.map((item, index) => (
-              <GridCard key={index} item={item} />
-            )) : <p>No Project Found</p>}
-          </div>
-        ) : (
-          <div className="list px-[100px]">
-            {filterData.length > 0 ? filterData.map((item, index) => (
-              <ListCard key={index} item={item} />
-            )) : <p>No Project Found</p>}
-          </div>
-        )}
-      </div>
+      {loading ? <div className="text-center mt-10">Loading your workspace...</div> : (
+        <div className="cards px-[100px]">
+          {filterData.length > 0 ? (
+            <div className={isGridLayout ? "grid grid-cols-3 gap-6" : "list flex flex-col gap-4"}>
+              {filterData.map((item) => isGridLayout ? <GridCard key={item._id} item={item} /> : <ListCard key={item._id} item={item} />)}
+            </div>
+          ) : <div className="text-gray-500 text-center py-20 border-2 border-dashed border-[#222] rounded-xl">No projects found. Create one!</div>}
+        </div>
+      )}
 
       {isCreateProject && (
-        <div className="createModelCon flex fixed top-0 left-0 right-0 bottom-0 bg-[rgba(0,0,0,0.3)] w-screen h-screen justify-center items-center">
-          <div className="createModel m-2 w-[40vw] h-[60vh] bg-[#141414] rounded-lg p-[20px] shadow-lg shadow-black/50">
-            <h1 className='text-2xl'>Create New Project</h1>
-            <div className="inputBox mt-3 !bg-[#202020]">
-              <input required onChange={(e) => setProjectTitle(e.target.value)} value={projectTitle} type="text" placeholder='Enter project title here...' />
-            </div>
-            <div className="options flex justify-between gap-2">
-              <button className="btn text-center text-[15px] w-[18vw] h-[13vh] text-white bg-[#00AEEF] rounded-lg" onClick={createP}>Create</button>
-              <button className="btn text-center text-[15px] w-[18vw] text-white bg-slate-600 rounded-lg" onClick={() => setIsCreateProject(false)}>Cancel</button>
+        <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-50">
+          <div className="bg-[#141414] w-[400px] p-8 rounded-xl border border-[#333]">
+            <h1 className='text-xl mb-4'>Project Title</h1>
+            <input className="w-full bg-[#202020] p-3 rounded-md mb-6 outline-none border border-[#444] focus:border-[#00AEEF]" autoFocus onChange={(e) => setProjectTitle(e.target.value)} value={projectTitle} type="text" placeholder='e.g. Portfolio Site' />
+            <div className="flex gap-3">
+              <button className="btnBlue flex-1" onClick={createP}>Create</button>
+              <button className="bg-[#333] flex-1 rounded-md" onClick={() => setIsCreateProject(false)}>Cancel</button>
             </div>
           </div>
         </div>
@@ -116,5 +100,4 @@ function Home() {
     </div>
   );
 }
-
 export default Home;
