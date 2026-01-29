@@ -1,3 +1,5 @@
+require('dotenv').config(); // Load variables from .env
+
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
@@ -9,7 +11,6 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 
 
-require('dotenv').config(); // Load variables from .env
 
 const mongoose = require('mongoose');
 
