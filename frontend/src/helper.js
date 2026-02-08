@@ -10,5 +10,9 @@ export const removeClass = (elSelector, className) => {
     
 };
 
+<<<<<<< HEAD
 
 export const api_based_url = "https://code-editor-n12w.onrender.com"
+=======
+export const api_based_url = "https://code-editor-n12w.onrender.com";
+>>>>>>> 4f7445a (ui fixed)
